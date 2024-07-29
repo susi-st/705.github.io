@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>簡化版出席記錄</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <div id="student">
+        <span id="name">張三</span>
+        <button onclick="toggleAttendance(this)">出席</button>
+    </div>
+    <button onclick="saveToSheet()">存檔</button>
+
+    <script>
+        // 初始化 Google Sheets API
+        function initClient() {
+            gapi.client.init({
+                apiKey: 'AIzaSyCEx5_Pv_o_YKr6rQn9TCs6nTCDFDChVt0',
+                clientId: '571380241997-jga8m2pp222eai4bjbdl2ehpferkc357.apps.googleusercontent.com',
+                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+                scope: "https://www.googleapis.com/auth/spreadsheets"
+            }).then(function() {
+                console.log('Google Sheets API 初始化成功');
+            }, function(error) {
+                console.error('Google Sheets API 初始化失敗:', error);
+            });
+        }
+
+        // 載入 Google Sheets API
+        gapi.load('client', initClient);
+
+        // 切換出席狀態
+        function toggleAttendance(button) {
+            button.textContent = button.textContent === '出席' ? '缺席' : '出席';
+        }
+
+        // 保存到 Google 試算表
+        function saveToSheet() {
+            if (!gapi.client) {
+                console.error('Google Sheets API 尚未初始化');
+                return;
+            }
+
+            const name = document.getElementById('name').textContent;
+            const status = document.querySelector('#student button').textContent;
+
+            gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: '1alNxNsSwvx9ETtNK2aPV9VYYbb9F51xpiPhJktUSgGA',
+                range: 'Sheet1!A:B',
+                valueInputOption: 'RAW',
+                insertDataOption: 'INSERT_ROWS',
+                resource: {
+                    values: [[name, status]]
+                }
+            }).then(function(response) {
+                console.log('資料已保存:', response);
+                alert('資料已成功保存到 Google 試算表！');
+            }, function(error) {
+                console.error('保存資料時發生錯誤:', error);
+                alert('保存資料時發生錯誤，請稍後再試。');
+            });
+        }
+    </script>
+</body>
+</html>
