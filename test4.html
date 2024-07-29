@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生出缺席記錄</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .class-options { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .class-options button { padding: 5px 10px; }
+        #students { display: flex; flex-wrap: wrap; gap: 10px; }
+        .student { border: 1px solid #ddd; padding: 10px; width: 150px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>學生出缺席記錄</h1>
+
+    <div id="urlSection">
+        <h2>請貼上學生名單網址：</h2>
+        <input type="text" id="studentListUrl" placeholder="輸入網址">
+        <button onclick="fetchStudentList()">獲取名單</button>
+    </div>
+
+    <div id="classSelection">
+        <h2>請選擇班級：</h2>
+        <div class="class-options">
+            <button onclick="selectClass(this)">701</button>
+            <button onclick="selectClass(this)">702</button>
+            <button onclick="selectClass(this)">703</button>
+            <button onclick="selectClass(this)">704</button>
+            <button onclick="selectClass(this)">705</button>
+        </div>
+        <div class="class-options">
+            <button onclick="selectClass(this)">706</button>
+            <button onclick="selectClass(this)">707</button>
+            <button onclick="selectClass(this)">708</button>
+            <button onclick="selectClass(this)">709</button>
+            <button onclick="selectClass(this)">710</button>
+        </div>
+        <button onclick="confirmClass()">確定</button>
+    </div>
+
+    <div id="studentList">
+        <h2>學生名單：</h2>
+        <div id="students"></div>
+        <button onclick="保存到Google試算表()">存檔</button>
+    </div>
+
+    <script>
+        // 載入 Google Sheets API
+        function 載入GoogleSheetsAPI() {
+            return new Promise((resolve, reject) => {
+                gapi.load('client', () => {
+                    gapi.client.init({
+                        apiKey: 'AIzaSyCEx5_Pv_o_YKr6rQn9TCs6nTCDFDChVt0',
+                        clientId: '571380241997-jga8m2pp222eai4bjbdl2ehpferkc357.apps.googleusercontent.com',
+                        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+                        scope: "https://www.googleapis.com/auth/spreadsheets"
+                    }).then(() => {
+                        resolve();
+                    }, (error) => {
+                        reject(error);
+                    });
+                });
+            });
+        }
+
+        // 將資料保存到 Google 試算表的函數
+        async function 保存到Google試算表() {
+            // 確保使用者已登入
+            if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                await gapi.auth2.getAuthInstance().signIn();
+            }
+
+            const 學生列表 = document.querySelectorAll('#students .student');
+            const 資料 = Array.from(學生列表).map(學生 => {
+                const 姓名 = 學生.querySelector('.name').textContent;
+                const 狀態 = 學生.querySelector('button').textContent;
+                return [姓名, 狀態];
+            });
+
+            const 試算表ID = '1alNxNsSwvx9ETtNK2aPV9VYYbb9F51xpiPhJktUSgGA';
+            const 範圍 = 'Sheet1!A2:B' + (資料.length + 1); // 從 A2 開始，保留標題行
+
+            try {
+                const 回應 = await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: 試算表ID,
+                    range: 範圍,
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: 資料
+                    }
+                });
+
+                console.log('資料成功保存:', 回應);
+                alert('資料已成功保存到 Google 試算表！');
+            } catch (錯誤) {
+                console.error('保存資料時發生錯誤:', 錯誤);
+                alert('保存資料時發生錯誤，請稍後再試。');
+            }
+        }
+
+        // 以下是原有的 JavaScript 函數
+        function fetchStudentList() {
+            // 模擬從 URL 獲取學生名單
+            const students = ['學生1', '學生2', '學生3', '學生4', '學生5'];
+            displayStudents(students);
+        }
+
+        function selectClass(button) {
+            document.querySelectorAll('.class-options button').forEach(btn => {
+                btn.style.backgroundColor = '';
+            });
+            button.style.backgroundColor = 'lightblue';
+        }
+
+        function confirmClass() {
+            alert('班級選擇已確認');
+        }
+
+        function displayStudents(students) {
+            const studentsContainer = document.getElementById('students');
+            studentsContainer.innerHTML = '';
+            students.forEach(student => {
+                const studentElement = document.createElement('div');
+                studentElement.className = 'student';
+                studentElement.innerHTML = `
+                    <div class="name">${student}</div>
+                    <button onclick="toggleAttendance(this)">出席</button>
+                `;
+                studentsContainer.appendChild(studentElement);
+            });
+        }
+
+        function toggleAttendance(button) {
+            button.textContent = button.textContent === '出席' ? '缺席' : '出席';
+        }
+
+        // 初始化 Google Sheets API
+        document.addEventListener('DOMContentLoaded', () => {
+            載入GoogleSheetsAPI().then(() => {
+                console.log('Google Sheets API 成功載入');
+            }).catch((錯誤) => {
+                console.error('載入 Google Sheets API 時發生錯誤:', 錯誤);
+            });
+        });
+    </script>
+</body>
+</html>
