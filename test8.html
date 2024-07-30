@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>傳送文字到 Google 試算表</title>
+</head>
+<body>
+  <input type="text" id="inputText" placeholder="請輸入文字">
+  <button onclick="sendToSheet()">傳送</button>
+
+  <script>
+    function sendToSheet() {
+      const inputText = document.getElementById('inputText').value;
+      const spreadsheetId = '1alNxNsSwvx9ETtNK2aPV9VYYbb9F51xpiPhJktUSgGA'; // 請替換成你自己的試算表 ID
+      const range = 'A3'; // 指定要寫入的範圍
+
+      // 建立 HTTP 請求
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:append`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer 你的存取權杖`, // 請替換成你自己的存取權杖
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          values: [[inputText]]
+        })
+      })
+      .then(response => response.json())
+      .then(data => console.log('Success:', data))
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+</body>
+</html>
