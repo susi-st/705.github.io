@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片名稱猜測遊戲</title>
+    <style>
+        #photo {
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        #buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #score {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <img id="photo" src="" alt="Random Photo">
+    </div>
+    <div id="buttons">
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+    </div>
+    <table id="results">
+        <tr>
+            <th>答對的姓名</th>
+            <th>答錯的姓名</th>
+        </tr>
+    </table>
+    <div id="score"></div>
+
+    <script>
+        let names = [];
+        let remainingPhotos = [];
+        let correctCount = 0;
+
+        // 從 name.txt 文件中讀取名字列表
+        fetch('name.txt')
+            .then(response => response.text())
+            .then(text => {
+                names = text.trim().split('\n').map(name => name.trim());
+                startGame();
+            })
+            .catch(error => console.error('Error fetching the names:', error));
+
+        // 初始化剩餘的照片索引
+        for (let i = 0; i < 29; i++) {
+            remainingPhotos.push(i);
+        }
+
+        function startGame() {
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            if (remainingPhotos.length === 0) {
+                displayScore();
+                return;
+            }
+
+            // 隨機選擇一張照片的索引並從剩餘列表中移除
+            const randomIndex = Math.floor(Math.random() * remainingPhotos.length);
+            const photoIndex = remainingPhotos.splice(randomIndex, 1)[0] + 1;
+
+            const correctName = names[photoIndex - 1];
+            const photoPath = `img/05${photoIndex.toString().padStart(2, '0')}.jpg`;
+
+            document.getElementById('photo').src = photoPath;
+
+            // 隨機選擇按鈕選項，至少包含兩個0514號以後的名字
+            let options = [correctName];
+            while (options.length < 4) {
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                const randomIndex = parseInt(randomName.slice(0, 4));
+                
+                // 確保至少有兩個選項的索引在0514及之後
+                const femalesCount = options.filter(option => parseInt(option.slice(0, 4)) >= 514).length;
+                
+                if (!options.includes(randomName) && (femalesCount < 2 || randomIndex >= 514)) {
+                    options.push(randomName);
+                }
+            }
+
+            options.sort(() => Math.random() - 0.5);
+            const buttons = document.querySelectorAll('#buttons button');
+            buttons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.disabled = false;
+            });
+        }
+
+        function checkAnswer(button) {
+            const answer = button.textContent;
+            const correctName = document.getElementById('photo').src.split('/').pop().replace('.jpg', '') + names.find(name => name.includes(answer)).slice(4);
+
+            if (answer === correctName) {
+                correctCount++;
+                document.querySelector('#results').insertAdjacentHTML('beforeend', `<tr><td>${correctName}</td><td></td></tr>`);
+            } else {
+                document.querySelector('#results').insertAdjacentHTML('beforeend', `<tr><td></td><td>${answer}</td></tr>`);
+            }
+
+            loadNextQuestion();
+        }
+
+        function displayScore() {
+            const score = (correctCount / 29) * 100;
+            document.getElementById('score').textContent = `你的成績：${score.toFixed(2)}`;
+        }
+    </script>
+</body>
+</html>

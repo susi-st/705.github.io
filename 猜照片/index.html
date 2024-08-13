@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片名稱猜測遊戲</title>
+    <style>
+        #photo {
+            width: 300px;
+            height: 386px;
+            margin-bottom: 20px;
+        }
+
+        #buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #score {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <img id="photo" src="" alt="Random Photo">
+    </div>
+    <div id="buttons">
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+    </div>
+<a href="./index2.html">第二個遊戲</a></p>
+    <table id="results">
+        <tr>
+            <th>答對的姓名</th>
+            <th>答錯的姓名</th>
+        </tr>
+    </table>
+    <div id="score"></div>
+
+    <script>
+        let names = [];
+        let remainingPhotos = [];
+        let correctCount = 0;
+
+        // 從 name.txt 文件中讀取名字列表
+        fetch('name.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                names = text.trim().split('\n').map(name => name.trim());
+                startGame();
+            })
+            .catch(error => {
+                console.error('Error fetching the names:', error);
+                alert('名字列表讀取失敗，請確認 name.txt 是否存在且位於正確的路徑中。');
+            });
+
+        // 初始化剩餘的照片索引
+        for (let i = 0; i < 29; i++) {
+            remainingPhotos.push(i);
+        }
+
+        function startGame() {
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            if (remainingPhotos.length === 0) {
+                displayScore();
+                return;
+            }
+
+            // 隨機選擇一張照片的索引並從剩餘列表中移除
+            const randomIndex = Math.floor(Math.random() * remainingPhotos.length);
+            const photoIndex = remainingPhotos.splice(randomIndex, 1)[0] + 1;
+
+            const correctName = names[photoIndex - 1];
+            const photoPath = `img/05${photoIndex.toString().padStart(2, '0')}.jpg`;
+
+            const imgElement = document.getElementById('photo');
+            imgElement.src = photoPath;
+            imgElement.alt = correctName;
+
+            imgElement.onerror = () => {
+                console.error('Image not found:', photoPath);
+                alert('圖片加載失敗，請確認圖片是否存在於正確的路徑中。');
+            };
+
+            // 確定性別並生成選項
+            const isFemale = parseInt(correctName.slice(0, 4)) <= 514; // 判斷是女生
+            const optionsPool = isFemale ? names.filter(name => parseInt(name.slice(0, 4)) <= 514)
+                                         : names.filter(name => parseInt(name.slice(0, 4)) > 514);
+            let options = [correctName];
+
+            while (options.length < 4) {
+                const randomOption = optionsPool[Math.floor(Math.random() * optionsPool.length)];
+                if (!options.includes(randomOption)) {
+                    options.push(randomOption);
+                }
+            }
+
+            options.sort(() => Math.random() - 0.5);
+            const buttons = document.querySelectorAll('#buttons button');
+            buttons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.disabled = false;
+            });
+        }
+
+        function checkAnswer(button) {
+            const answer = button.textContent;
+            const correctName = document.getElementById('photo').alt;
+
+            if (answer === correctName) {
+                correctCount++;
+                document.querySelector('#results').insertAdjacentHTML('beforeend', `<tr><td>${correctName}</td><td></td></tr>`);
+            } else {
+                document.querySelector('#results').insertAdjacentHTML('beforeend', `<tr><td></td><td>${correctName}</td></tr>`);
+            }
+
+            loadNextQuestion();
+        }
+
+        function displayScore() {
+            const score = (correctCount / 29) * 100;
+            document.getElementById('score').textContent = `你的成績：${score.toFixed(2)}`;
+        }
+
+    </script>
+</body>
+</html>

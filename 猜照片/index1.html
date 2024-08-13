@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片名稱猜測遊戲</title>
+    <style>
+        #photo {
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        #buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #score {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <img id="photo" src="" alt="Random Photo">
+    </div>
+    <div id="buttons">
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+        <button onclick="checkAnswer(this)"></button>
+    </div>
+    <table id="results">
+        <tr>
+            <th>答對的姓名</th>
+            <th>答錯的姓名</th>
+        </tr>
+    </table>
+    <div id="score"></div>
+
+    <script>
+        let names = [];
+        let currentPhotoIndex = 0;
+        let correctCount = 0;
+
+        // 模擬 name.txt 文件中的數據
+        const nameText = `
+0501楊子青
+0502魏寧妤
+0503吳紫妍
+0504張子琦
+0505林愷昕
+0506徐莉婕
+0507江凱璇
+0508黃喜苓
+0509譚日晰
+0510魏千紜
+0511賴品汝
+0512林芊亞
+0513江嘉純
+0514王潔心
+0515林暐倫
+0516温家亮
+0517蘇楦紘
+0518趙毅亮
+0519王長綸
+0520周楹家
+0521李至昇
+0522廖雲旭
+0523林秉昇
+0524邱子瀚
+0525陳奕銨
+0526林汶謙
+0527賴雨陞
+0528姚天裕
+0529施澄昊
+        `.trim();
+
+        names = nameText.split('\n').map(name => name.trim());
+        
+        function loadNextQuestion() {
+            if (currentPhotoIndex >= 29) {
+                displayScore();
+                return;
+            }
+
+            const photoIndex = currentPhotoIndex + 1;
+            const correctName = names[currentPhotoIndex];
+            const photoPath = `img/050${photoIndex.toString().padStart(2, '0')}.jpg`;
+
+            document.getElementById('photo').src = photoPath;
+
+            let options = [correctName];
+            while (options.length < 4) {
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                if (!options.includes(randomName)) {
+                    options.push(randomName);
+                }
+            }
+
+            options.sort(() => Math.random() - 0.5);
+            const buttons = document.querySelectorAll('#buttons button');
+            buttons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.disabled = false;
+            });
+        }
+
+        function checkAnswer(button) {
+            const answer = button.textContent;
+            const correctName = names[currentPhotoIndex];
+            if (answer === correctName) {
+                correctCount++;
+                document.querySelector('#results').insertAdjacentHTML('beforeend', `<tr><td>${correctName}</td><td></td></tr>`);
+            } else {
+                document.querySelector('#results').insertAdjacentHTML('beforeend', `<tr><td></td><td>${answer}</td></tr>`);
+            }
+
+            currentPhotoIndex++;
+            loadNextQuestion();
+        }
+
+        function displayScore() {
+            const score = (correctCount / 29) * 100;
+            document.getElementById('score').textContent = `你的成績：${score.toFixed(2)}`;
+        }
+
+        // 開始遊戲
+        loadNextQuestion();
+    </script>
+</body>
+</html>
+

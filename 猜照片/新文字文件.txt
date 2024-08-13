@@ -1,0 +1,16 @@
+<div>
+  <img id="photo" src="" alt="Random Photo">
+</div>
+<div id="buttons">
+  <button onclick="checkAnswer(this)"></button>
+  <button onclick="checkAnswer(this)"></button>
+  <button onclick="checkAnswer(this)"></button>
+  <button onclick="checkAnswer(this)"></button>
+</div>
+<table id="results">
+  <tr>
+    <th>Correct</th>
+    <th>Incorrect</th>
+  </tr>
+</table>
+<div id="score"></div>
